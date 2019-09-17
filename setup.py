@@ -19,6 +19,6 @@ setup(
     'Programming Language :: 3.6',
   ],
   
-  packages=['streusel']
+  packages=['streusel'],
   install_requires['tqdm','numpy','pandas','os','math','ase','pickle','shutil','time']
 )
