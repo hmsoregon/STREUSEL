@@ -20,5 +20,5 @@ setup(
   ],
   
   packages=['streusel'],
-  install_requires['tqdm','numpy','pandas','os','math','ase','pickle','shutil','time']
+  install_requires=['tqdm','numpy','pandas','os','math','ase','pickle','shutil','time']
 )
