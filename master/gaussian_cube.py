@@ -19,7 +19,7 @@ class Molecule:
 
     def __init__(self, file):
         """ read in cube file using ase, and assign material properties """
-        potential, ngx, ngy, ngz, atoms, lattice, coords, species, origin, resolution = self.read_cube_file(file)
+        potential, ngx, ngy, ngz, atoms, lattice, coords, species, origin, resolution = pf.read_cube_file(file)
         self.pot_grid = potential
         self.ngs = [ngx, ngy, ngz]
         self.atoms = atoms
