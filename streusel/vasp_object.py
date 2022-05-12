@@ -1,12 +1,11 @@
-import geometry_manipulation_functions as gm
-import process_functions as pf 
-import math_functions as mf 
+from . import geometry_manipulation_functions as gm
+from . import process_functions as pf 
+from . import math_functions as mf 
 from tqdm import tqdm
 import pandas as pd 
 import numpy as np 
 import pickle
 import shutil
-import time
 import math
 import os
 

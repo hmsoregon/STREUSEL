@@ -1,6 +1,7 @@
-import sys
-sys.path.insert(0,'CHANGE/THIS/TO/THE/LOCATION/OF/STREUSEL/ON/YOUR/COMPUTER/')
-from gaussian_cube import *
+# import sys
+# sys.path.insert(0,'CHANGE/THIS/TO/THE/LOCATION/OF/STREUSEL/ON/YOUR/COMPUTER/')
+import streusel
+from streusel.gaussian_cube import *
 from tqdm import tqdm
 import pandas as pd
 import glob

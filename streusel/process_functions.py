@@ -1,4 +1,4 @@
-import math_functions as mf 
+from . import math_functions as mf 
 from ase.visualize import view
 import pandas as pd
 import numpy as np

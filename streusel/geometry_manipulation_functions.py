@@ -1,4 +1,4 @@
-import math_functions as mf 
+from . import math_functions as mf 
 import pandas as pd
 import numpy as np
 import pickle
