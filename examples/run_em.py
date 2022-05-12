@@ -1,6 +1,5 @@
-import sys
-sys.path.insert(0,'path-to-STREUSEL')
-from vasp_object import *
+import streusel
+from streusel.vasp_object import *
 
 # Define material object and read in LOCPOT
 mat = Material('LOCPOT-file-name')
