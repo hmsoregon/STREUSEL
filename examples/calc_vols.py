@@ -7,7 +7,7 @@ import os
 
 df = pd.DataFrame()
 
-for mpath in glob.glob('/PATH/TO/CUBE/FILES/*.cube'):
+for mpath in glob.glob('*.cube'):
   el = mpath.split('/')
   molecule = el[len(el)-2]
   print(molecule)
