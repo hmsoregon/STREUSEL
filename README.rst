@@ -19,6 +19,7 @@ If you use ``STREUSEL`` please cite
     https://github.com/austin-mroz/STREUSEL
 
 and
+
     https://doi.org/10.1039/D2SC00780K
 
 Acknowledgements
