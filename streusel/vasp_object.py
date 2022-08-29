@@ -1,13 +1,15 @@
 from . import geometry_manipulation_functions as gm
-from . import process_functions as pf 
-from . import math_functions as mf 
+from . import process_functions as pf
+from . import math_functions as mf
 from tqdm import tqdm
-import pandas as pd 
-import numpy as np 
+import pandas as pd
+import numpy as np
 import pickle
 import shutil
 import math
 import os
+import scipy.ndimage
+import itertools
 
 
 class Material:
@@ -26,7 +28,7 @@ class Material:
         self.num_atoms = num_atoms
         self.total_num_atoms = total_num_atoms
         self.ucv = ucv
-        self.vecs = vec 
+        self.vecs = vec
         self.cryst_density = cryst_density
         self.pot_grid = pg
         self.coords_and_atoms = gm.combine_coordsANDatoms(coords, species, num_atoms=num_atoms)
@@ -74,6 +76,41 @@ class Material:
         mj = (vecs[0]/ngs[0]) * (vecs[2]/ngs[2])
         mk = (vecs[0]/ngs[0]) * (vecs[1]/ngs[1])
         print(mi, mj, mk)
+        efield_view = efield[:-1, :-1, :-1]
+        efield_diff = efield_view - efield[1:, 1:, 1:]
+        np.absolute(efield_diff, out=efield_diff)
+        is_vacuum = efield_diff < cv
+        is_non_vacuum = np.logical_not(is_vacuum)
+        vacuum = efield_view[is_vacuum]
+        non_vacuum = efield_view[is_non_vacuum]
+        nvac_ijk = np.argwhere(is_non_vacuum)
+        weights = np.zeros((3, 3, 3))
+
+        weights[1, 1, 2] = 1
+        weights[1, 1, 0] = 1
+        weights[:, :, 1] = [
+            [0, 1, 0],
+            [1, 0, 1],
+            [0, 1, 0],
+        ]
+
+        convolution_result = scipy.ndimage.convolve(
+            input=is_vacuum.view(np.int8),
+            weights=weights,
+            mode='wrap',
+        )
+        np.multiply(
+            convolution_result,
+            is_non_vacuum.view(np.int8),
+            out=convolution_result,
+        )
+        surface_mask = convolution_result > 0
+        surf_ijk = np.argwhere(surface_mask)
+        sarea = np.sum(surface_mask) * mk
+        sarea2 = np.sum(convolution_result) * mk
+        print('surface areas', sarea, sarea2)
+
+        """
         for i in tqdm(range(ngs[0] - 1)):
             for j in range(ngs[1] - 1):
                 for k in range(ngs[2] - 1):
@@ -92,6 +129,7 @@ class Material:
                     elif v == 2 or n == 2:
                         v = 0
                         n = 0
+        """
         """
         for i in tqdm(range(ngs[0]-2, ngs[0]-1)):
             for j in range(ngs[1]-2, ngs[1]-1):
@@ -149,7 +187,7 @@ class Material:
         self.sijk = surf_ijk
         self.nijk = nvac_ijk
         self.surf_area = sarea * float(1e-20)*float(self.n)*float(6.022e23)
-        
+
 
     def calc_volume(self, vol_type):
         ng = self.ngs
@@ -180,9 +218,9 @@ class Material:
         # cvf.create_vacs(vx, vy, vz)
         # except Exception:
         # cvf.remove_vacs(vx)
-        path = '/home/hmspanama/Desktop/CMOFs/label_CoREMOFs'
+        path = '/home/he/bin/github_clones/STREUSEL/examples/'
         try:
-            os.makedirs(path + '/sepvac/')      
+            os.makedirs(path + '/sepvac/')
         except OSError:
             shutil.rmtree(path + '/sepvac/')
             os.makedirs(path + '/sepvac/')
@@ -192,7 +230,7 @@ class Material:
         mi = (vecs[1]/ng[1]) * (vecs[2]/ng[2])
         mj = (vecs[0]/ng[0]) * (vecs[2]/ng[2])
         mk = (vecs[0]/ng[0]) * (vecs[1]/ng[1])
-        
+
         # avgms = (mi+mj+mk)/3
         avgms = (mi*mj + mi*mk + mk*mj)
         avgsurf = float(avgms) * len(self.surf) * float(1e-20)*float(self.n)*float(6.022e23)
@@ -212,7 +250,7 @@ class Material:
         """
         print(nvac[:].shape)
         cvf.create_vacs(nvac[:,0], nvac[:,1], nvac[:,2])
-                
+
         tic = time.time()
         print('pre sa loop >>')
         x = sijk[:,0]
@@ -252,13 +290,13 @@ class Material:
         vacuum = []
         non_vacuum = []
         surface = []
-        
+
         vacpot = []
         nvacpot = []
         surfpot = []
         surf_ijk = []
         cubepot = []
-        
+
         n = 0
         v = 0
 
@@ -303,7 +341,7 @@ class Material:
                     elif v == 2 or n == 2:
                         v = 0
                         n = 0
-        
+
         # vol_per_cube = (vecs[0]/ng[0]) * (vecs[1]/ng[1]) * (vecs[2]/ng[2])
 
         # mof_vol = 8*float(vol_per_cube)*len(vacuum)*float(1e-24)*float(self.n)*float(6.022e23)

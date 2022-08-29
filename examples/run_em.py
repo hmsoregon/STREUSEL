@@ -2,7 +2,7 @@ import streusel
 from streusel.vasp_object import *
 
 # Define material object and read in LOCPOT
-mat = Material('LOCPOT-file-name')
+mat = Material('Ne_LOCPOT')
 
 # Derive electric field from electrostatic potential values in LOCPOT
 mat.get_efield()
@@ -11,10 +11,7 @@ mat.get_efield()
 mat.sample_field()
 
 # Calculate the volume
-mat.calc_volume('MOF_pore')
+mat.calc_volume('molecule')
 
-# Calculate the surface area
-mat.calc_surfacearea()
-
-print(mat.vol, mat.surf_area)
+print(mat.vol) # , mat.surf_area)
 

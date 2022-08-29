@@ -8,6 +8,7 @@ import pickle
 import math
 import os
 import ase
+import scipy.ndimage
 
 # -------------------------------------------------------------------------------------------------------
 # Defines object type Molecule >> can handle Gaussian .cube output file
@@ -109,9 +110,9 @@ class Molecule:
 
         grad_x, grad_y, grad_z = np.gradient(pgrid[:,:,:], res[0], res[1], res[2])
 
-        xy = np.multiply(grad_x, grad_y)
-        grad_mag = np.multiply(xy, grad_z)
-        # grad_mag = mf.grad_magnitude(grad_x, grad_y, grad_z)
+        # xy = np.multiply(grad_x, grad_y)
+        # grad_mag = np.multiply(xy, grad_z)
+        grad_mag = mf.grad_magnitude(grad_x, grad_y, grad_z)
         print(grad_mag.shape)
         self.efield = grad_mag
 
@@ -223,6 +224,7 @@ class Molecule:
         """ samples the electric field and bins the vac, nvac, and surface cubes """
         efield = self.efield
         ngs = self.ngs
+        vecs = self.vecs
         cv = 1e-5
         vacuum = []
         non_vacuum = []
@@ -230,9 +232,44 @@ class Molecule:
         vac_ijk = []
         nvac_ijk = pd.DataFrame()
         surf_ijk = []
-
+        vol_per_cube = (vecs[0]/ngs[0]) * (vecs[1]/ngs[1]) * (vecs[2]/ngs[2])
         v = 0 
         n = 0
+
+        efield_view = efield[:-1,:-1,:-1]
+        efield_diff = efield_view - efield[1:, 1:, 1:]
+        np.absolute(efield_diff, out=efield_diff)
+        is_vacuum = efield_diff < cv
+        is_non_vacuum = np.logical_not(is_vacuum)
+        vacuum = efield_view[is_vacuum]
+        non_vacuum = efield_view[is_non_vacuum]
+        nvac_ijk = np.argwhere(is_non_vacuum)
+        weights = np.zeros((3,3,3))
+        weights[1,1,2] = 1
+        weights[1,1,0] = 1
+        weights[:,:,1] = [
+                [0,1,0],
+                [1,0,1],
+                [0,1,0]
+                ]
+        convolution_result = scipy.ndimage.convolve(
+                input=is_vacuum.view(np.int8),
+                weights = weights,
+                mode='wrap'
+                )
+        np.multiply(
+                convolution_result,
+                is_non_vacuum.view(np.int8),
+                out=convolution_result,
+                )
+        surface_mask = convolution_result > 0
+        surf_ijk = np.argwhere(surface_mask)
+        mk = (vecs[0]/ngs[0]) * (vecs[1]/ngs[1])
+        sarea = np.sum(surface_mask) * mk
+        sarea2 = np.sum(convolution_result) * mk
+        print('surface areas ', sarea, sarea2)
+        print('volume', np.sum(is_non_vacuum)*vol_per_cube)
+        """
         vc = 0
         nc = 0
         get_first_rise = 0
@@ -265,14 +302,14 @@ class Molecule:
                             count = 0
                     count += 1
                 get_first_rise = 0
-
+        """
         vecs = self.vecs
         vol_per_cube = (vecs[0]/ngs[0]) * (vecs[1]/ngs[1]) * (vecs[2]/ngs[2])
         ubound_vol = vol_per_cube * len(non_vacuum) # * np.power(0.529,3)
 
         self.vol = ubound_vol
         #self.nvac = non_vacuum
-        #self.surf = surface
+        self.surf = surface
         self.sijk = surf_ijk
         #self.vac = vacuum
 
