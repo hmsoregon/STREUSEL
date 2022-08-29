@@ -1,24 +1,16 @@
-from . import math_functions as mf 
+from . import math_functions as mf
 from ase.visualize import view
 import pandas as pd
 import numpy as np
 import ase.io.cube
 import pickle
-import os
 
 def read_cube_file(filename):
 
     potential, atoms = ase.io.cube.read_cube_data(filename)
-    vector_a = np.linalg.norm(atoms.cell[1])
-    vector_b = np.linalg.norm(atoms.cell[1])
-    vector_c = np.linalg.norm(atoms.cell[2])
-    NGX = len(potential)
-    NGY = len(potential[0])
-    NGZ = len(potential[0][0])
-    resolution_x = vector_a/NGX
-    resolution_y = vector_b/NGY
-    resolution_z = vector_c/NGZ
-    # print(type(atoms))
+    vectors = np.linalg.norm(atoms.cell, axis=1)
+    NGX, NGY, NGZ = potential.shape
+    resolution = vectors / potential.shape
     coords = atoms.get_positions()
     atom_types = atoms.get_chemical_symbols()
 
@@ -26,32 +18,30 @@ def read_cube_file(filename):
         lines = cube.readlines()
     origin = [float(i) for i in lines[2].split()[1:-1]]
 
-    # symbols = atoms.symbols
-
-    return potential, NGX, NGY, NGZ, atoms, [vector_a, vector_b, vector_c], coords, atom_types, origin, [resolution_x, resolution_y, resolution_z]
+    return potential, NGX, NGY, NGZ, atoms, vectors, coords, atom_types, origin, resolution
 
 def load_obj(name):
 #   with open(name, 'rb') as f:
 #       return pickle.load(f)
     return pickle.load(open(name, 'rb'))
-    
+
 def get_te(species, num_atoms):
     """ Returns the total number of valence electrons for the unit cell """
-    tot_electrons = {'Ru': 8.0, 'Re': 7.0, 'Rf': 261.0, 'Ra': 226.0, 'Rb': 85.47, 'Rn': 8.0, 
-                    'Rh': 9.0, 'Be': 2.0, 'Ba': 137.33, 'Bh': 264.0, 'Bi': 5.0, 'Bk': 247.0, 
-                    'Br': 7.0, 'H': 1.0, 'P': 5.0, 'Os': 8.0, 'Es': 252.0, 'Hg': 12.0, 'Ge': 4.0, 
-                    'Gd': 18.0, 'Ga': 3.0, 'Pr': 13.0, 'Pt': 10.0, 'Pu': 16.0, 'C': 4.0, 'Pb': 4.0, 
-                    'Pa': 13.0, 'Pd': 10.0, 'Cd': 12.0, 'Po': 6.0, 'Pm': 15.0, 'Hs': 269.0, 'Ho': 21.0, 
-                    'Hf': 4.0, 'K': 39.1, 'He': 2.0, 'Md': 258.0, 'Mg': 2.0, 'Mo': 6.0, 'Mn': 7.0, 'O': 6.0, 
-                    'Mt': 268.0, 'S': 6.0, 'W': 6.0, 'Zn': 12.0, 'Eu': 17.0, 'Zr': 91.22, 'Er': 22.0, 
-                    'Ni': 10.0, 'No': 259.0, 'Na': 1.0, 'Nb': 92.91, 'Nd': 14.0, 'Ne': 8.0, 'Np': 15.0, 
-                    'Fr': 223.0, 'Fe': 8.0, 'Fm': 257.0, 'B': 3.0, 'F': 7.0, 'Sr': 87.62, 'N': 5.0, 
-                    'Kr': 8.0, 'Si': 4.0, 'Sn': 4.0, 'Sm': 16.0, 'V': 5.0, 'Sc': 3.0, 'Sb': 5.0, 
-                    'Sg': 266.0, 'Se': 6.0, 'Co': 9.0, 'Cm': 18.0, 'Cl': 7.0, 'Ca': 40.08, 'Cf': 251.0, 
-                    'Ce': 12.0, 'Xe': 8.0, 'Lu': 25.0, 'Cs': 132.91, 'Cr': 6.0, 'Cu': 11.0, 'La': 11.0, 
-                    'Li': 1.0, 'Tl': 3.0, 'Tm': 23.0, 'Lr': 262.0, 'Th': 12.0, 'Ti': 4.0, 'Te': 6.0, 
-                    'Tb': 19.0, 'Tc': 7.0, 'Ta': 5.0, 'Yb': 24.0, 'Db': 262.0, 'Dy': 20.0, 'I': 7.0, 
-                    'U': 14.0, 'Y': 88.91, 'Ac': 11.0, 'Ag': 11.0, 'Ir': 9.0, 'Am': 17.0, 'Al': 3.0, 
+    tot_electrons = {'Ru': 8.0, 'Re': 7.0, 'Rf': 261.0, 'Ra': 226.0, 'Rb': 85.47, 'Rn': 8.0,
+                    'Rh': 9.0, 'Be': 2.0, 'Ba': 137.33, 'Bh': 264.0, 'Bi': 5.0, 'Bk': 247.0,
+                    'Br': 7.0, 'H': 1.0, 'P': 5.0, 'Os': 8.0, 'Es': 252.0, 'Hg': 12.0, 'Ge': 4.0,
+                    'Gd': 18.0, 'Ga': 3.0, 'Pr': 13.0, 'Pt': 10.0, 'Pu': 16.0, 'C': 4.0, 'Pb': 4.0,
+                    'Pa': 13.0, 'Pd': 10.0, 'Cd': 12.0, 'Po': 6.0, 'Pm': 15.0, 'Hs': 269.0, 'Ho': 21.0,
+                    'Hf': 4.0, 'K': 39.1, 'He': 2.0, 'Md': 258.0, 'Mg': 2.0, 'Mo': 6.0, 'Mn': 7.0, 'O': 6.0,
+                    'Mt': 268.0, 'S': 6.0, 'W': 6.0, 'Zn': 12.0, 'Eu': 17.0, 'Zr': 91.22, 'Er': 22.0,
+                    'Ni': 10.0, 'No': 259.0, 'Na': 1.0, 'Nb': 92.91, 'Nd': 14.0, 'Ne': 8.0, 'Np': 15.0,
+                    'Fr': 223.0, 'Fe': 8.0, 'Fm': 257.0, 'B': 3.0, 'F': 7.0, 'Sr': 87.62, 'N': 5.0,
+                    'Kr': 8.0, 'Si': 4.0, 'Sn': 4.0, 'Sm': 16.0, 'V': 5.0, 'Sc': 3.0, 'Sb': 5.0,
+                    'Sg': 266.0, 'Se': 6.0, 'Co': 9.0, 'Cm': 18.0, 'Cl': 7.0, 'Ca': 40.08, 'Cf': 251.0,
+                    'Ce': 12.0, 'Xe': 8.0, 'Lu': 25.0, 'Cs': 132.91, 'Cr': 6.0, 'Cu': 11.0, 'La': 11.0,
+                    'Li': 1.0, 'Tl': 3.0, 'Tm': 23.0, 'Lr': 262.0, 'Th': 12.0, 'Ti': 4.0, 'Te': 6.0,
+                    'Tb': 19.0, 'Tc': 7.0, 'Ta': 5.0, 'Yb': 24.0, 'Db': 262.0, 'Dy': 20.0, 'I': 7.0,
+                    'U': 14.0, 'Y': 88.91, 'Ac': 11.0, 'Ag': 11.0, 'Ir': 9.0, 'Am': 17.0, 'Al': 3.0,
                     'As': 5.0, 'Ar': 8.0, 'Au': 11.0, 'At': 7.0, 'In': 3.0}
 
     tot_e = 0
@@ -99,7 +89,7 @@ def unit_cell_volume(lattice):
         angle = np.arccos((np.dot(v1, v2))/(np.linalg.norm(v1)*np.linalg.norm(v2)))
         return angle
 
-    vec = [np.sqrt(lattice[0,0]**2+lattice[0,1]**2+lattice[0,2]**2), 
+    vec = [np.sqrt(lattice[0,0]**2+lattice[0,1]**2+lattice[0,2]**2),
         np.sqrt(lattice[1,0]**2+lattice[1,1]**2+lattice[1,2]**2),
         np.sqrt(lattice[2,0]**2+lattice[2,1]**2+lattice[2,2]**2)]
 
