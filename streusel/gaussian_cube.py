@@ -220,7 +220,74 @@ class Molecule:
         self.sijk = surf_ijk
         self.vac = vacuum
 
-    def sample_efield(self):
+
+    def sample_efield_original(self):
+        """ samples the electric field and bins the vac, nvac, and surface cubes """
+        efield = self.efield
+        ngs = self.ngs
+        vecs = self.vecs
+        cv = 1e-5
+        vacuum = []
+        non_vacuum = []
+        surface = []
+        vac_ijk = []
+        nvac_ijk = pd.DataFrame()
+        surf_ijk = []
+        vol_per_cube = (vecs[0]/ngs[0]) * (vecs[1]/ngs[1]) * (vecs[2]/ngs[2])
+        v = 0 
+        n = 0
+
+        vc = 0
+        nc = 0
+        get_first_rise = 0
+        for i in tqdm(range(ngs[0] - 1)):
+            for j in range(ngs[1] - 1):
+                count = 1
+                for k in range(ngs[2] - 1):
+                    if np.absolute(efield[i,j,k] - efield[i + 1, j + 1, k + 1]) <= cv:
+                        vacuum.append(efield[i,j,k])
+                        v += 1
+                        n = 0
+                    else:
+                        non_vacuum.append(efield[i,j,k])
+                        n += 1
+                        v = 0
+                    if n/count != 1.0 and v/count != 1.0:
+                        if get_first_rise == 0:
+                            surface.append(efield[i,j,k])
+                            surf_ijk.append([[i, j, k]])
+                            needed_mag = efield[i,j,k]
+                            n = 0
+                            v = 0
+                            count = 0
+                            get_first_rise += 1
+                        elif np.absolute(efield[i,j,k] - needed_mag) <= 1e-10:
+                            surface.append(efield[i,j,k])
+                            surf_ijk.append([[i,j,k]])
+                            n = 0
+                            v = 0
+                            count = 0
+                    count += 1
+                get_first_rise = 0
+        
+        vecs = self.vecs
+        vol_per_cube = (vecs[0]/ngs[0]) * (vecs[1]/ngs[1]) * (vecs[2]/ngs[2])
+        ubound_vol = vol_per_cube * len(non_vacuum) # * np.power(0.529,3)
+
+        mk = (vecs[0]/ngs[0]) * (vecs[1]/ngs[1])
+        self.sarea = len(surface)*mk # np.sum(surface_mask) * mk
+        self.sarea2 = len(surface)*mk # np.sum(convolution_result) * mk
+        # print('surface areas ', sarea, sarea2)
+        # print('volume', np.sum(is_non_vacuum)*vol_per_cube)
+        
+        self.vol = ubound_vol
+        #self.nvac = non_vacuum
+        self.surf = surface
+        self.sijk = surf_ijk
+        #self.vac = vacuum
+
+
+    def sample_efield_optimized(self):
         """ samples the electric field and bins the vac, nvac, and surface cubes """
         efield = self.efield
         ngs = self.ngs
@@ -265,10 +332,10 @@ class Molecule:
         surface_mask = convolution_result > 0
         surf_ijk = np.argwhere(surface_mask)
         mk = (vecs[0]/ngs[0]) * (vecs[1]/ngs[1])
-        sarea = np.sum(surface_mask) * mk
-        sarea2 = np.sum(convolution_result) * mk
-        print('surface areas ', sarea, sarea2)
-        print('volume', np.sum(is_non_vacuum)*vol_per_cube)
+        self.sarea = np.sum(surface_mask) * mk
+        self.sarea2 = np.sum(convolution_result) * mk
+        # print('surface areas ', sarea, sarea2)
+        # print('volume', np.sum(is_non_vacuum)*vol_per_cube)
         """
         vc = 0
         nc = 0

@@ -1,10 +1,31 @@
 [project]
 name = "streusel"
-version = "1.0.18"
-dependencies = [
-    'tqdm','numpy','pandas','ase'
-]
+dynamic = ["version"]
+dependencies = ['tqdm', 'numpy', 'pandas', 'ase']
+
+[project.optional-dependencies]
+dev = ['black', 'flake8', 'mypy', 'isort', 'pytest']
+
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-data]
+streusel = ["py.typed"]
+
+[tool.setuptools_.scm]
+
+[tool.black]
+line-length = 79
+
+[tool.isort]
+line_length = 79
+profile = "black"
+
+[tool.mypy]
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = []
+ignore_missing_imports = true
