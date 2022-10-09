@@ -1,24 +1,27 @@
 import streusel
 import glob
 import pytest
+import pathlib
+import argparse
+
+def _get_command_line_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("neutral_atom_directory", type=str)
+    parser.add_argument('-a', '--atom', type=str)
+    return parser.parse_args()
 
 
-def test_gaussian_implementations_for_volumes() -> None:
-    # arrange -> arrange the data you are testing
-    neutral_atom_cube_files = '/home/he/bin/hba_submitted_data/ionic_radii/neutral_atom_data/*/epot_200.cube'
+def main() -> None:
+    cli_args = _get_command_line_arguments()
+    neutral_atoms_directory = cli_args.neutral_atom_directory
 
-    # act -> calculate the things you want to test
-    for atom_cube in glob.glob(neutral_atom_cube_files):
-        mol = streusel.Molecule(atom_cube)
-        mol.get_efield()
-        mol.sample_efield_original()
-        original_method_volume = mol.vol
+    if cli_args.atom == 'H':
+        print('hello')
 
-        mol.sample_efield_optimized()
-        optimized_method_volume = mol.vol
 
-        # assert -> determine if the test passed or not
-        assert original_method_volume == pytest.approx(optimized_method_volume)
+if __name__ == '__main__':
+    main()
+
 
 
 def test_gaussian_implementations_for_surface_areas() -> None:

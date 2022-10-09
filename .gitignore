@@ -1,4 +1,6 @@
 dist
 *.egg-info
+fix-optimmized-method/**/*.png
+*.cube
 
 **/__pycache__/

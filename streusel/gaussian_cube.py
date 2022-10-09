@@ -272,15 +272,17 @@ class Molecule:
         
         vecs = self.vecs
         vol_per_cube = (vecs[0]/ngs[0]) * (vecs[1]/ngs[1]) * (vecs[2]/ngs[2])
-        ubound_vol = vol_per_cube * len(non_vacuum) # * np.power(0.529,3)
+        ubound_vol = vol_per_cube * len(non_vacuum) * np.power(0.529,3)
 
         mk = (vecs[0]/ngs[0]) * (vecs[1]/ngs[1])
-        self.sarea = len(surface)*mk # np.sum(surface_mask) * mk
+        self.sarea = len(surface)*mk*np.power(0.529,2) # np.sum(surface_mask) * mk
         self.sarea2 = len(surface)*mk # np.sum(convolution_result) * mk
         # print('surface areas ', sarea, sarea2)
         # print('volume', np.sum(is_non_vacuum)*vol_per_cube)
         
-        self.vol = ubound_vol
+
+
+        self.original_vol = ubound_vol
         #self.nvac = non_vacuum
         self.surf = surface
         self.sijk = surf_ijk
@@ -331,11 +333,12 @@ class Molecule:
                 )
         surface_mask = convolution_result > 0
         surf_ijk = np.argwhere(surface_mask)
+        self.sijk = surf_ijk
         mk = (vecs[0]/ngs[0]) * (vecs[1]/ngs[1])
-        self.sarea = np.sum(surface_mask) * mk
+        self.sarea = np.sum(surface_mask) * mk * np.power(0.529, 2)
         self.sarea2 = np.sum(convolution_result) * mk
-        # print('surface areas ', sarea, sarea2)
-        # print('volume', np.sum(is_non_vacuum)*vol_per_cube)
+        self.optimized_method_curl = np.array(efield_diff)
+
         """
         vc = 0
         nc = 0
@@ -372,9 +375,9 @@ class Molecule:
         """
         vecs = self.vecs
         vol_per_cube = (vecs[0]/ngs[0]) * (vecs[1]/ngs[1]) * (vecs[2]/ngs[2])
-        ubound_vol = vol_per_cube * len(non_vacuum) # * np.power(0.529,3)
+        ubound_vol = vol_per_cube * len(non_vacuum) * np.power(0.529,3)
 
-        self.vol = ubound_vol
+        self.optimized_vol = ubound_vol
         #self.nvac = non_vacuum
         self.surf = surface
         self.sijk = surf_ijk
